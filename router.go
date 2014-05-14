@@ -36,7 +36,8 @@ func (r *router) Add(re, dest string) error {
 	// check for doubles
 	for _, d := range r.route[rec] {
 		if d == dest {
-			return fmt.Errorf("IP address %s already in list for %s", dest, re)
+			//return fmt.Errorf("IP address %s already in list for %s", dest, re)
+			return nil
 		}
 	}
 	r.route[rec] = append(r.route[rec], dest)
@@ -60,6 +61,11 @@ func (r *router) Remove(re, dest string) error {
 	return nil
 }
 
+func (r *router) RemoveServer(serv string) {
+	r.Lock()
+	defer r.Unlock()
+}
+
 func (r *router) Match(qname string) ([]string, error) {
 	r.RLock()
 	defer r.RUnlock()
@@ -69,4 +75,16 @@ func (r *router) Match(qname string) ([]string, error) {
 		}
 	}
 	return nil, fmt.Errorf("No match found for %s", qname)
+}
+
+func (r *router) Servers() []string {
+	r.RLock()
+	defer r.RUnlock()
+
+	s := make([]string, 0, 5)
+	// no de-duplication takes place here
+	for _, dest := range r.route {
+		s = append(s, dest...)
+	}
+	return s
 }

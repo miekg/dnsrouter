@@ -19,6 +19,7 @@ type server struct {
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 	group        *sync.WaitGroup
+	router	     *router
 }
 
 // Newserver returns a new server.
@@ -26,7 +27,7 @@ func NewServer(client *etcd.Client, addr string) *server {
 	if addr == "" {
 		addr = "127.0.0.1:53"
 	}
-	return &server{client: client, addr: addr, group: new(sync.WaitGroup)}
+	return &server{client: client, addr: addr, group: new(sync.WaitGroup), router: NewRouter()}
 }
 
 // Run is a blocking operation that starts the server listening on the DNS ports.
@@ -37,7 +38,7 @@ func (s *server) Run() error {
 	s.group.Add(2)
 	go s.run(mux, "tcp")
 	go s.run(mux, "udp")
-	log.Printf("connected to etcd cluster at %s", machines)
+//	log.Printf("connected to etcd cluster at %s", machines)
 
 	s.group.Wait()
 	return nil

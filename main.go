@@ -19,7 +19,7 @@ var (
 	dnsaddr  = os.Getenv("DNS_ADDR")                          // Listen on this address
 )
 
-func newClient() (client *etcd.Client) {
+func NewClient() (client *etcd.Client) {
 	if len(machines) == 1 && machines[0] == "" {
 		machines[0] = "http://127.0.0.1:4001"
 	}
@@ -36,7 +36,7 @@ func newClient() (client *etcd.Client) {
 }
 
 func main() {
-	s := NewServer(newClient(), dnsaddr)
+	s := NewServer(NewClient(), dnsaddr)
 	if err := s.Run(); err != nil {
 		log.Fatal(err)
 	}
