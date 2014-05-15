@@ -41,33 +41,33 @@ func (s *server) Run() error {
 	go s.run(mux, "tcp")
 	go s.run(mux, "udp")
 
-	// Get the first list of servers.
-	n, err := s.client.Get("/dnsrouter/", false, true)
-	if err != nil {
-		log.Fatal(err)
-	}
-	s.Update(n)
-
 	// Healthchecking.
+	log.Printf("enabling health checking")
 	go func() {
 		for {
-			time.Sleep(5 * 10e9)
-			log.Printf("health check")
+			time.Sleep(5 * 1e9)
 			s.HealthCheck()
 		}
 	}()
 
 	// Set a Watch and check for changes.
+	log.Printf("setting watch")
 	ch := make(chan *etcd.Response)
-	s.client.Watch("/dnsrouter/", 0, true, ch, s.stop)
 	go func() {
-		select {
-		case n := <-ch:
-			log.Printf("watch active")
-			s.Update(n)
+		go s.client.Watch("/dnsrouter", 0, true, ch, s.stop)
+		for {
+			select {
+			case n := <-ch:
+				s.Update(n)
+			}
 		}
 	}()
-
+	log.Printf("getting initial list")
+	n, err := s.client.Get("/dnsrouter/", false, true)
+	if err == nil {
+		s.Update(n)
+	}
+	log.Printf("ready for queries")
 	s.group.Wait()
 	return nil
 }

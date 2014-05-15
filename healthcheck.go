@@ -27,7 +27,7 @@ func (s *server) HealthCheck() {
 		if !check(c, m, serv+":53") {
 			// do it again
 			if !check(c, m, serv+":53") {
-				log.Printf("healthcheck failed for %s, removing")
+				log.Printf("healthcheck failed for %s", serv)
 				s.router.RemoveServer(serv)
 			}
 		}

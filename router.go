@@ -6,71 +6,84 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"regexp"
 	"sync"
 )
 
 type router struct {
-	route map[*regexp.Regexp][]string
+	route map[string][]string
 	sync.RWMutex
 }
 
 func NewRouter() *router {
-	return &router{route: make(map[*regexp.Regexp][]string)}
+	return &router{route: make(map[string][]string)}
 }
 
-func (r *router) Add(re, dest string) error {
+func (r *router) Add(dest, re string) error {
 	r.Lock()
 	defer r.Unlock()
 	if net.ParseIP(dest) == nil {
 		return fmt.Errorf("not an IP address %s", dest)
 	}
-	rec, err := regexp.Compile(re)
+	_, err := regexp.Compile(re)
 	if err != nil {
 		return err
 	}
-	if _, ok := r.route[rec]; !ok {
-		r.route[rec] = make([]string, 0)
+	if _, ok := r.route[re]; !ok {
+		r.route[re] = make([]string, 0)
 	}
 	// check for doubles
-	for _, d := range r.route[rec] {
+	for _, d := range r.route[re] {
 		if d == dest {
-			//return fmt.Errorf("IP address %s already in list for %s", dest, re)
+			log.Printf("address %s already in list for %s", dest, re)
 			return nil
 		}
 	}
-	r.route[rec] = append(r.route[rec], dest)
+	log.Printf("adding route %s for %s", re, dest)
+	r.route[re] = append(r.route[re], dest)
 	return nil
 }
 
-func (r *router) Remove(re, dest string) error {
+func (r *router) Remove(dest, re string) error {
 	r.Lock()
 	defer r.Unlock()
-	if net.ParseIP(dest) == nil {
-		return fmt.Errorf("not an IP address %s", dest)
-	}
-	rec, err := regexp.Compile(re)
+	_, err := regexp.Compile(re)
 	if err != nil {
 		return err
 	}
-	if _, ok := r.route[rec]; !ok {
+	if _, ok := r.route[re]; !ok {
 		return fmt.Errorf("Regexp %s does not exist", re)
 	}
-	// remove from list
+	for i, s := range r.route[re] {
+		if s == dest {
+			log.Printf("removing %s", s)
+			r.route[re] = append(r.route[re][:i], r.route[re][i+1:]...)
+			return nil
+		}
+	}
 	return nil
 }
 
 func (r *router) RemoveServer(serv string) {
-	r.Lock()
-	defer r.Unlock()
+	for rec, servs := range r.route {
+		for _, serv1 := range servs {
+			if serv1 == serv {
+				// TODO(miek): not optimal to convert this back to strings.
+				if err := r.Remove(serv, rec); err != nil {
+					log.Printf("%s", err)
+				}
+			}
+		}
+	}
 }
 
 func (r *router) Match(qname string) ([]string, error) {
 	r.RLock()
 	defer r.RUnlock()
 	for re, dest := range r.route {
-		if re.MatchString(qname) {
+		if ok, _ := regexp.Match(re, []byte(qname)); ok {
 			return dest, nil
 		}
 	}
