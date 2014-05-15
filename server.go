@@ -99,7 +99,7 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	name := strings.ToLower(q.Name)
 
 	allServers, err := s.router.Match(name)
-	if err != nil {
+	if err != nil || len(allServers) == 0 {
 		m := new(dns.Msg)
 		m.SetRcode(req, dns.RcodeServerFailure)
 		w.WriteMsg(m)
