@@ -23,6 +23,7 @@ func (s *server) HealthCheck() {
 
 	// doing this in the loop is not the best idea
 	for _, serv := range s.router.Servers() {
+		log.Printf("Healthchecking %s", serv)
 		if !check(c, m, serv+":53") {
 			// do it again
 			if !check(c, m, serv+":53") {
