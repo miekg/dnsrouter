@@ -14,7 +14,7 @@ func (s *server) Update(e *etcd.Response) {
 	// process the first and then loop over nodes
 	parts := strings.SplitN(e.Node.Value, ",", 2)
 	if len(parts) != 2 {
-		log.Printf("Unable to parse node %s with value %s", e.Node.Key, e.Node.Value)
+		log.Printf("unable to parse node %s with value %s", e.Node.Key, e.Node.Value)
 	} else {
 		if err := s.router.Add(parts[0], parts[1]); err != nil {
 			log.Printf("Unable to add %s", err)
@@ -23,10 +23,10 @@ func (s *server) Update(e *etcd.Response) {
 	for _, n := range e.Node.Nodes {
 		parts := strings.SplitN(n.Value, ",", 2)
 		if len(parts) != 2 {
-			log.Printf("Unable to parse node %s with value %s", n.Key, n.Value)
+			log.Printf("unable to parse node %s with value %s", n.Key, n.Value)
 		} else {
 			if err := s.router.Add(parts[0], parts[1]); err != nil {
-				log.Printf("Unable to add %s", err)
+				log.Printf("unable to add %s", err)
 			}
 		}
 	}

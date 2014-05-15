@@ -52,6 +52,7 @@ func (s *server) Run() error {
 	go func() {
 		for {
 			time.Sleep(5 * 10e9)
+			log.Printf("health check")
 			s.HealthCheck()
 		}
 	}()
@@ -62,6 +63,7 @@ func (s *server) Run() error {
 	go func() {
 		select {
 		case n := <-ch:
+			log.Printf("watch active")
 			s.Update(n)
 		}
 	}()
