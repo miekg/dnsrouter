@@ -98,6 +98,13 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	q := req.Question[0]
 	name := strings.ToLower(q.Name)
 
+	if q.Qtype == dns.TypeIXFR || q.Qtype == dns.TypeAXFR {
+		m := new(dns.Msg)
+		m.SetRcode(req, dns.RcodeNotImplemented)
+		w.WriteMsg(m)
+		return
+	}
+
 	allServers, err := s.router.Match(name)
 	if err != nil || len(allServers) == 0 {
 		m := new(dns.Msg)
