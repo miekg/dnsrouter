@@ -21,6 +21,7 @@ type server struct {
 	writeTimeout time.Duration
 	group        *sync.WaitGroup
 	router       *router
+	stop         chan bool
 }
 
 // Newserver returns a new server.
@@ -28,7 +29,7 @@ func NewServer(client *etcd.Client, addr string) *server {
 	if addr == "" {
 		addr = "127.0.0.1:53"
 	}
-	return &server{client: client, addr: addr, group: new(sync.WaitGroup), router: NewRouter()}
+	return &server{client: client, addr: addr, group: new(sync.WaitGroup), router: NewRouter(), stop: make(chan bool)}
 }
 
 // Run is a blocking operation that starts the server listening on the DNS ports.
@@ -39,10 +40,31 @@ func (s *server) Run() error {
 	s.group.Add(2)
 	go s.run(mux, "tcp")
 	go s.run(mux, "udp")
-	//	log.Printf("connected to etcd cluster at %s", machines)
 
-	// Setup healthchecking
-	// Get first list of servers
+	// Get the first list of servers.
+	n, err := s.client.Get("/dnsrouter/", false, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+	s.Update(n)
+
+	// Healthchecking.
+	go func() {
+		for {
+			time.Sleep(5 * 10e9)
+			s.HealthCheck()
+		}
+	}()
+
+	// Set a Watch and check for changes.
+	ch := make(chan *etcd.Response)
+	s.client.Watch("/dnsrouter/", 0, true, ch, s.stop)
+	go func() {
+		select {
+		case n := <-ch:
+			s.Update(n)
+		}
+	}()
 
 	s.group.Wait()
 	return nil
@@ -50,6 +72,7 @@ func (s *server) Run() error {
 
 // Stop stops a server.
 func (s *server) Stop() {
+	s.stop <- true
 	s.group.Done()
 	s.group.Done()
 }

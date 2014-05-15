@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (s *server) Update(e etcd.Response) {
+func (s *server) Update(e *etcd.Response) {
 	// process the first and then loop over nodes
 	parts := strings.SplitN(e.Node.Value, ",", 2)
 	if len(parts) != 2 {
