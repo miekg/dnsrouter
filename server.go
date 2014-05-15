@@ -41,6 +41,9 @@ func (s *server) Run() error {
 	go s.run(mux, "udp")
 	//	log.Printf("connected to etcd cluster at %s", machines)
 
+	// Setup healthchecking
+	// Get first list of servers
+
 	s.group.Wait()
 	return nil
 }
