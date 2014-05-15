@@ -12,8 +12,8 @@ sure each server has enough of the NSEC/NSEC3 chain to give back valid responses
 
 * It gets a list of nameservers from etcd;
     * Each nameserver publishes a file in etcd in the directory `/dnsrouter/`,
-        the name of the file is an UUID identifier. Each file contains an
-       `<ip>`,`<regexp>` combination;
+        the name of the file is an UUID (or whatever, there is no check for this)
+        identifier. Each file contains an `<ip>`,`<regexp>` combination;
     * Every query that matches the regular expression is sent to this ip, if there
         are multiple ips it will round robin.
 * Sets a watch on the directory to get notifications;
