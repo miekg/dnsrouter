@@ -6,6 +6,7 @@ package main
 
 import (
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,7 +20,7 @@ type server struct {
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 	group        *sync.WaitGroup
-	router	     *router
+	router       *router
 }
 
 // Newserver returns a new server.
@@ -38,7 +39,7 @@ func (s *server) Run() error {
 	s.group.Add(2)
 	go s.run(mux, "tcp")
 	go s.run(mux, "udp")
-//	log.Printf("connected to etcd cluster at %s", machines)
+	//	log.Printf("connected to etcd cluster at %s", machines)
 
 	s.group.Wait()
 	return nil
@@ -65,9 +66,26 @@ func (s *server) run(mux *dns.ServeMux, net string) {
 	}
 }
 
-// ServeDNS is the handler for DNS requests, responsible for parsing DNS request, possibly forwarding
-// it to a real dns server and returning a response.
 func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
-	//q := req.Question[0]
-	//name := strings.ToLower(q.Name)
+	q := req.Question[0]
+	name := strings.ToLower(q.Name)
+
+	allServers, err := s.router.Match(name)
+	if err != nil {
+		m := new(dns.Msg)
+		m.SetRcode(req, dns.RcodeServerFailure)
+		w.WriteMsg(m)
+		return
+	}
+	serv := allServers[int(dns.Id())%len(allServers)]
+
+	c := new(dns.Client)
+	ret, _, err := c.Exchange(req, serv+":53")
+	if err != nil {
+		m := new(dns.Msg)
+		m.SetRcode(req, dns.RcodeServerFailure)
+		w.WriteMsg(m)
+		return
+	}
+	w.WriteMsg(ret)
 }
