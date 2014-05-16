@@ -115,7 +115,7 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	serv := allServers[int(dns.Id())%len(allServers)]
 
 	c := new(dns.Client)
-	ret, _, err := c.Exchange(req, serv+":53")
+	ret, _, err := c.Exchange(req, serv)	 // serv has the port
 	if err != nil {
 		m := new(dns.Msg)
 		m.SetRcode(req, dns.RcodeServerFailure)

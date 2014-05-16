@@ -24,10 +24,16 @@ func NewRouter() *router {
 func (r *router) Add(dest, re string) error {
 	r.Lock()
 	defer r.Unlock()
-	if net.ParseIP(dest) == nil {
+	// For v6 this needs to be [ipv6]:port .
+	// Don't care about port here, just if the syntax is OK.
+	ip, _, err := net.SplitHostPort(dest)
+	if err != nil {
+		return err
+	}
+	if net.ParseIP(ip) == nil {
 		return fmt.Errorf("not an IP address %s", dest)
 	}
-	_, err := regexp.Compile(re)
+	_, err = regexp.Compile(re)
 	if err != nil {
 		return err
 	}
