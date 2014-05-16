@@ -23,9 +23,9 @@ func (s *server) HealthCheck() {
 
 	// doing this in the loop is not the best idea
 	for _, serv := range s.router.Servers() {
-		if !check(c, m, serv+":53") {
+		if !check(c, m, serv) {
 			// do it again
-			if !check(c, m, serv+":53") {
+			if !check(c, m, serv) {
 				log.Printf("healthcheck failed for %s", serv)
 				s.router.RemoveServer(serv)
 			}
