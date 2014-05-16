@@ -33,3 +33,17 @@ Features I want, but are not implemented yet:
         other tricks.
 * Re-use the original packet bytes (this may be a feature for Go DNS);
 * Make it more efficient.
+
+## Usage
+
+Start the server on a machine. Start a nameserver on another; export the machines'
+address and port where it listens for incoming DNS packets and a regular expression
+for which names it is authoritative, do this *after* the server has been started:
+
+    curl -XPUT http://127.0.0.1:4001/v2/keys/dnsrouter/$(uuid) \
+        -d value="10.1.1.15:5300,^[ab]*\.miek\.nl\.$" 
+
+And maybe another one for the apex of the zone
+
+    curl -XPUT http://127.0.0.1:4001/v2/keys/dnsrouter/$(uuid) \
+        -d value="10.1.1.15:5300,^miek\.nl\.$" 
