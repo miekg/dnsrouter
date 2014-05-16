@@ -18,10 +18,11 @@ sure each server has enough of the NSEC/NSEC3 chain to give back valid responses
         are multiple ips it will round robin.
 * Sets a watch on the directory to get notifications;
 * It health checks the nameservers with a TCP connection doing a `id.server` CH TXT query;
-    * if no reply the remote server is seen, it will be removed from the list.
+    * if no reply from the remote server is seen, it will be removed from the list.
 * Each return packet travels back through the DNS router back to the client;
 * Each connection is done over UDP to the nameserver, even for clients who initially
-    connected over TCP;
+    connect over TCP;
+    * This is faked by using a large UDP buffer size (not implemented yet).
 * AXFR or IXFR is not supported and NACKed on the DNS router;
 * If none of the regular expression match a SERVFAIL is returned to the client.
 
