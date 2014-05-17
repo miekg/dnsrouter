@@ -113,6 +113,7 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 		return
 	}
 	serv := allServers[int(dns.Id())%len(allServers)]
+	log.Printf("routing %s to %s", name, serv)
 
 	c := new(dns.Client)
 	ret, _, err := c.Exchange(req, serv)	 // serv has the port
